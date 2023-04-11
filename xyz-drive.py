@@ -9,6 +9,7 @@ from PIL import Image
 # Used for input/output
 import vgamepad as vg
 import pygame
+from pygame.locals import *
 
 from datetime import datetime
 import os, sys
@@ -22,7 +23,10 @@ sct = mss()
 # Init input/output
 gamepad = vg.VX360Gamepad()
 pygame.init()
-screen = pygame.display.set_mode((400, 400))
+screen = pygame.display.set_mode((964, 604))
+pygame.font.init()
+header_font = pygame.font.SysFont('Arial', 30)
+regular_font = pygame.font.SysFont('Arial', 16)
 
 # 0 - do nothing
 # 1 - capture training data
@@ -69,7 +73,7 @@ def run():
         img = np.array(sct_img)
         img = cv2.resize(img, (960, 540))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        cv2.imshow('screen', img)
+        #cv2.imshow('screen', img)
 
         if(mode == 0): # normal mode
             screen.fill("white")
@@ -89,12 +93,28 @@ def run():
             neuralNetData = neuralNet.predict(netImg)
             #print(neuralNetData)
             throttle = int(neuralNetData[0][1].item() * 100)
-            brake = int(neuralNetData[0][0].item() * 100)
+            brake = (int(neuralNetData[0][0].item() * 100) - 50) * 10
             steer = (-int(neuralNetData[0][2].item() * 2000000) - 10000) * 10
             print("Throttle " + str(throttle))
             print("Brake " + str(brake))
             print("Steering " + str(steer))
         
+        screen.blit(pygame.image.frombuffer(img.toString(), img.shape[1::-1], "BGR"), (2, 2))
+        pygame.draw.rect(screen, (255, 255, 255), [0, 544, 962, 60], 0)
+        
+        titleSurface = header_font.render('xyz-drive', False, (0, 0, 0))
+        screen.blit(titleSurface, (2, 546))
+
+        controlsSurface = regular_font.render('WASD: Move, Z: Manual Control mode, X: Train Mode, C: Autonomous Mode', False, (0, 0, 0))
+        screen.blit(controlsSurface, (2, 576))
+
+        if(mode == 0 or mode == 1):
+            predictionSurface = regular_font.render('Driving manually', False, (0, 0, 0))
+            screen.blit(controlsSurface, (2, 582))
+        else:
+            predictionSurface = regular_font.render("Throttle " + str(throttle) + " Brake " + str(brake) + " Steering " + str(steer), False, (0, 0, 0))
+            screen.blit(controlsSurface, (2, 582))
+
         pygame.display.flip()
         gamepad.left_trigger(value=brake)
         gamepad.right_trigger(value=throttle)

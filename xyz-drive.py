@@ -91,7 +91,6 @@ def run():
             netImg = cv2.merge([img, img, img])
             netImg = np.reshape(netImg, (1, 1, 540, 960, 3))
             neuralNetData = neuralNet.predict(netImg)
-            #print(neuralNetData)
             throttle = int(neuralNetData[0][1].item() * 100)
             brake = (int(neuralNetData[0][0].item() * 100) - 50) * 10
             steer = (-int(neuralNetData[0][2].item() * 2000000) - 10000) * 10
@@ -99,21 +98,21 @@ def run():
             print("Brake " + str(brake))
             print("Steering " + str(steer))
         
-        screen.blit(pygame.image.frombuffer(img.toString(), img.shape[1::-1], "BGR"), (2, 2))
+        screen.blit(pygame.image.frombuffer(cv2.merge([img, img, img]).tostring(), img.shape[1::-1], "BGR"), (2, 2))
         pygame.draw.rect(screen, (255, 255, 255), [0, 544, 962, 60], 0)
         
         titleSurface = header_font.render('xyz-drive', False, (0, 0, 0))
-        screen.blit(titleSurface, (2, 546))
+        screen.blit(titleSurface, (830, 546))
 
         controlsSurface = regular_font.render('WASD: Move, Z: Manual Control mode, X: Train Mode, C: Autonomous Mode', False, (0, 0, 0))
-        screen.blit(controlsSurface, (2, 576))
+        screen.blit(controlsSurface, (2, 546))
 
         if(mode == 0 or mode == 1):
             predictionSurface = regular_font.render('Driving manually', False, (0, 0, 0))
-            screen.blit(controlsSurface, (2, 582))
+            screen.blit(predictionSurface, (2, 582))
         else:
             predictionSurface = regular_font.render("Throttle " + str(throttle) + " Brake " + str(brake) + " Steering " + str(steer), False, (0, 0, 0))
-            screen.blit(controlsSurface, (2, 582))
+            screen.blit(predictionSurface, (2, 582))
 
         pygame.display.flip()
         gamepad.left_trigger(value=brake)

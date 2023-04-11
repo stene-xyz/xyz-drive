@@ -1,0 +1,10 @@
+pygame
+opencv-python
+vgamepad
+pillow
+mss
+numpy
+keras
+scikit-learn
+pandas
+tensorflow

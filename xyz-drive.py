@@ -37,8 +37,6 @@ def run():
                 cv2.destroyAllWindows()
                 pygame.quit()
                 return
-        
-        screen.fill("white")
 
         keys = pygame.key.get_pressed()
         throttle = 0
@@ -73,7 +71,10 @@ def run():
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         cv2.imshow('screen', img)
 
+        if(mode == 0): # normal mode
+            screen.fill("white")
         if(mode == 1): # train mode
+            screen.fill("red")
             imageFilename = datetime.now().strftime("%b-%d-%j-%I-%M-%p-%S-%f.png")
             cv2.imwrite("data-img/" + imageFilename, img)
             neuralNetData = [False, False, False]
@@ -81,17 +82,20 @@ def run():
             neuralNetData[1] = brake
             neuralNetData[2] = steer
             neuralNet.dataset.data[imageFilename] = neuralNetData
-
-            pygame.display.flip()
         if(mode == 2):
+            screen.fill("blue")
             netImg = cv2.merge([img, img, img])
             netImg = np.reshape(netImg, (1, 1, 540, 960, 3))
             neuralNetData = neuralNet.predict(netImg)
             #print(neuralNetData)
-            throttle = int(neuralNetData[0][0].item()) * 100
-            brake = int(neuralNetData[0][1].item()) * 100
-            steer = int(neuralNetData[0][2].item()) * 100
+            throttle = int(neuralNetData[0][1].item() * 100)
+            brake = int(neuralNetData[0][0].item() * 100)
+            steer = (-int(neuralNetData[0][2].item() * 2000000) - 10000) * 10
+            print("Throttle " + str(throttle))
+            print("Brake " + str(brake))
+            print("Steering " + str(steer))
         
+        pygame.display.flip()
         gamepad.left_trigger(value=brake)
         gamepad.right_trigger(value=throttle)
         gamepad.left_joystick(x_value=steer, y_value=0)
@@ -99,7 +103,7 @@ def run():
 
 if("--train" in sys.argv):
     neuralNet.train()
-    neuralNet.model.save()
+    neuralNet.model.save("model.cm")
     neuralNet.dataset.save()
 else:
     run()
